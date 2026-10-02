@@ -1,0 +1,27 @@
+# ---------------------------------------------------------------------------
+# SECRET: a Widevine device identity. NEVER commit a real one. The build
+# embeds whatever is at this path; it must stay out of the public repo.
+# ---------------------------------------------------------------------------
+embedded.wvd
+*.wvd
+
+# Build output
+/build/
+/dist/
+nimcache/
+*.o
+*.obj
+*.a
+*.lib
+*.exp
+*.dll
+*.so
+*.dylib
+*.exe
+
+# Vendored mbedTLS build tree (sources are fetched by tools/fetch-mbedtls, not committed)
+/third-party/mbedtls/
+
+# Editor / OS
+*.swp
+.DS_Store

@@ -1,0 +1,8 @@
+## PLACEHOLDER — overwritten by the build from the embedded.wvd device identity.
+## Committed as `embedded_device.nim.example`; this working copy is gitignored
+## so a real device key can never be committed. With an empty device the CDM
+## initializes but every license request fails (the intended "no identity"
+## behaviour).
+
+proc embeddedDevice*(): seq[byte] =
+  @[]

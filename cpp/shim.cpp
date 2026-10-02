@@ -8,10 +8,20 @@
  *
  * This mirrors what openwv gets from autocxx's `subclass!`, done by hand. */
 #include "common_cdm.h"
-#include "wv_abi.h"
+#include "wv_types.h"
+#include "wv_exports.h"
 
 #include <cstring>
-#include <new>
+#include <cstdlib>
+#include <new>  // placement new (header-only; no libstdc++ dependency)
+
+/* Freestanding operator new/delete so we never link libstdc++. We allocate via
+ * placement-new over malloc and tear down explicitly, but a virtual
+ * destructor's deleting-variant still references operator delete, so define
+ * them. */
+void* operator new(std::size_t n) { return std::malloc(n); }
+void operator delete(void* p) noexcept { std::free(p); }
+void operator delete(void* p, std::size_t) noexcept { std::free(p); }
 
 using namespace cdm;
 
@@ -65,10 +75,10 @@ void shim_host_on_reject_promise(void* host, uint32_t pid, uint32_t exc,
                            msg_len);
 }
 void shim_host_on_session_message(void* host, const char* sid, uint32_t n,
-                                  uint32_t msg_type, const char* msg,
+                                  uint32_t msg_type, const uint8_t* msg,
                                   uint32_t msg_len) {
-  H(host)->OnSessionMessage(sid, n, static_cast<MessageType>(msg_type), msg,
-                            msg_len);
+  H(host)->OnSessionMessage(sid, n, static_cast<MessageType>(msg_type),
+                            reinterpret_cast<const char*>(msg), msg_len);
 }
 void shim_host_on_session_keys_change(void* host, const char* sid, uint32_t n,
                                       int has_new_key, const WvKeyInfo* keys,
@@ -172,7 +182,10 @@ class OpenWvCdm : public CommonCdm {
 
   void Destroy() override {
     wv_destroy(handle_);
-    delete this;
+    // Manual teardown (malloc/placement-new in CreateCdmInstance) so we never
+    // pull operator new/delete from libstdc++.
+    this->~OpenWvCdm();
+    std::free(this);
   }
 
  private:
@@ -216,11 +229,12 @@ WV_EXPORT void* CreateCdmInstance(int cdm_interface_version,
   void* handle = wv_create(host, cdm_interface_version);
   if (!handle) return nullptr;
 
-  OpenWvCdm* cdm = new (std::nothrow) OpenWvCdm(handle);
-  if (!cdm) {
+  void* mem = std::malloc(sizeof(OpenWvCdm));
+  if (!mem) {
     wv_destroy(handle);
     return nullptr;
   }
+  OpenWvCdm* cdm = new (mem) OpenWvCdm(handle);
   /* Return the pointer cast to the requested interface. */
   if (cdm_interface_version == 10)
     return static_cast<ContentDecryptionModule_10*>(cdm);

@@ -2,7 +2,7 @@
 ## ergonomic wrappers that work in terms of seq[byte]. The {.compile.} of
 ## wvcrypto.c and the mbedTLS link flags live in the main module (widevine.nim).
 
-{.passC: "-Icpp".}
+{.passC: "-I../cpp".}
 
 # --- raw bindings ----------------------------------------------------------
 

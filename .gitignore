@@ -25,3 +25,6 @@ nimcache/
 # Editor / OS
 *.swp
 .DS_Store
+
+# Generated (may embed a real device key) — never commit; see .example
+src/embedded_device.nim

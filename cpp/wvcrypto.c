@@ -14,6 +14,15 @@
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 
+/* These raw PKCS#1 DER importers are defined in libmbedcrypto but declared only
+ * in an internal header (library/rsa_internal.h), which isn't installed. They
+ * parse a bare RSAPrivateKey / RSAPublicKey — exactly the .wvd and Widevine
+ * device-cert key encodings. Forward-declare them to use the archive symbols. */
+int mbedtls_rsa_parse_key(mbedtls_rsa_context *rsa, const unsigned char *key,
+                          size_t keylen);
+int mbedtls_rsa_parse_pubkey(mbedtls_rsa_context *rsa, const unsigned char *key,
+                             size_t keylen);
+
 /* ------------------------------------------------------------------ RNG --- */
 /* One process-wide CTR_DRBG, lazily seeded. mbedTLS's entropy source uses the
  * platform CSPRNG (BCrypt/wincrypt on Windows, getrandom on Linux). */
